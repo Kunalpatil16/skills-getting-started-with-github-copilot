@@ -25,7 +25,31 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="participants">
+            <div class="participants-title">Participants</div>
+            <ul class="participants-list"></ul>
+          </div>
         `;
+
+        // Populate participants list safely
+        const participantsUl = activityCard.querySelector(".participants-list");
+        if (Array.isArray(details.participants) && details.participants.length > 0) {
+          details.participants.forEach((participant) => {
+            const li = document.createElement("li");
+            // participant may be an object or string; handle common cases
+            if (participant && typeof participant === "object" && participant.name) {
+              li.textContent = participant.name;
+            } else {
+              li.textContent = String(participant);
+            }
+            participantsUl.appendChild(li);
+          });
+        } else {
+          const li = document.createElement("li");
+          li.className = "no-participants";
+          li.textContent = "No participants yet";
+          participantsUl.appendChild(li);
+        }
 
         activitiesList.appendChild(activityCard);
 
