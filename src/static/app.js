@@ -25,7 +25,76 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="participants">
+            <div class="participants-title">Participants</div>
+            <ul class="participants-list"></ul>
+          </div>
         `;
+
+        // Populate participants list safely
+        const participantsUl = activityCard.querySelector(".participants-list");
+        if (Array.isArray(details.participants) && details.participants.length > 0) {
+          details.participants.forEach((participant) => {
+            const li = document.createElement("li");
+            const participantText = participant && typeof participant === "object" && participant.name 
+              ? participant.name 
+              : String(participant);
+            
+            // Create container for participant and delete button
+            const container = document.createElement("div");
+            container.className = "participant-item";
+            
+            // Create text span
+            const textSpan = document.createElement("span");
+            textSpan.textContent = participantText;
+            container.appendChild(textSpan);
+            
+            // Create delete button
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-participant-btn";
+            deleteBtn.innerHTML = "&times;";
+            deleteBtn.title = "Remove participant";
+            deleteBtn.addEventListener("click", async (e) => {
+              e.preventDefault();
+              try {
+                const response = await fetch(
+                  `/activities/${encodeURIComponent(name)}/unregister?email=${encodeURIComponent(participant)}`,
+                  { method: "DELETE" }
+                );
+                
+                if (response.ok) {
+                  // Refresh the activities list
+                  fetchActivities();
+                  messageDiv.textContent = "Participant removed successfully";
+                  messageDiv.className = "success";
+                  messageDiv.classList.remove("hidden");
+                  setTimeout(() => {
+                    messageDiv.classList.add("hidden");
+                  }, 3000);
+                } else {
+                  const result = await response.json();
+                  messageDiv.textContent = result.detail || "Failed to remove participant";
+                  messageDiv.className = "error";
+                  messageDiv.classList.remove("hidden");
+                }
+              } catch (error) {
+                console.error("Error removing participant:", error);
+                messageDiv.textContent = "Failed to remove participant";
+                messageDiv.className = "error";
+                messageDiv.classList.remove("hidden");
+              }
+            });
+            container.appendChild(deleteBtn);
+            
+            li.appendChild(container);
+            participantsUl.appendChild(li);
+          });
+        } else {
+          const li = document.createElement("li");
+          li.className = "no-participants";
+          li.textContent = "No participants yet";
+          participantsUl.appendChild(li);
+        }
 
         activitiesList.appendChild(activityCard);
 
